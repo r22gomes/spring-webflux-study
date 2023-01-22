@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
 import java.util.NoSuchElementException;
 
 @RestController
@@ -28,11 +29,18 @@ public class ShowController {
     }
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public Mono<Show> create(@Valid @RequestBody Show show){
         return showService.create(show)
                 .log();
     }
 
+
+    @PostMapping("batch")
+    @ResponseStatus(HttpStatus.CREATED)
+    public Flux<Show> create(@RequestBody List<Show> show){ // not best approach but good to see transactional in action
+        return showService.saveAll(show);
+    }
     @PutMapping("{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public Mono<Void> put(@PathVariable Integer id, @Valid @RequestBody Show show){
@@ -54,6 +62,8 @@ public class ShowController {
                 .switchIfEmpty(Mono.error(new NoSuchElementException("Could not find element with name " + name)))
                 .log();
     }
+
+
 
 
 }

@@ -6,8 +6,8 @@ import reactor.core.publisher.Mono;
 
 public interface ShowRepository extends ReactiveCrudRepository<Show, Integer> {
 
-
     Mono<Show> findByName(final String name);
+
 
 
 }

@@ -19,7 +19,7 @@ public class Show {
     @Id
     private Integer id;
 
-    @NotNull
+    @NotNull(message = "The name of the show must not be null")
     @NotEmpty(message = "The name of the show must not be empty")
     private String name;
 
