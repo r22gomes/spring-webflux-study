@@ -3,18 +3,20 @@ package academy.devdojo.springwebfluxessentials.service;
 import academy.devdojo.springwebfluxessentials.domain.Show;
 import academy.devdojo.springwebfluxessentials.repository.ShowRepository;
 import io.netty.util.internal.StringUtil;
+import java.util.List;
+import java.util.NoSuchElementException;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.logging.log4j.Logger;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
+
 
 @Service
 @RequiredArgsConstructor
@@ -50,19 +52,20 @@ public class ShowService {
 
     public Mono<Void> delete(Integer id) {
         return this.findById(id)
-                .flatMap(e -> repository.delete(e));
+                .flatMap(repository::delete);
     }
 
     @Transactional // just example to easilly see how this annotation works
-    public Flux<Show> saveAll(List<Show> show) {
-        return repository.saveAll(show)
-                .doOnNext(this::throwResponseStatusExceptionWhenEmptyName);
+    public Flux<Show> saveAll(List<Show> show){
+            return repository.saveAll(show)
+                    .doOnNext(this::throwResponseStatusExceptionWhenEmptyName);
     }
 
 
     private void throwResponseStatusExceptionWhenEmptyName(Show s){
         if(StringUtil.isNullOrEmpty(s.getName())){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Invalid Name");
+            throw  (new ResponseStatusException(HttpStatus.BAD_REQUEST,"Invalid Name was spotted"));
         }
+
     }
 }

@@ -9,7 +9,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
@@ -22,10 +24,11 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
+import java.util.List;
 
 @ExtendWith(SpringExtension.class)
-@WebFluxTest
-@Import(ShowService.class)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@AutoConfigureWebTestClient
 public class ShowControllerIT {
 
     private final Show show = ShowCreator.validShow();
@@ -37,12 +40,12 @@ public class ShowControllerIT {
     private WebTestClient testClient;
 
     @BeforeAll
-    public static void setupBlockhound(){
+    public static void setupBlockhound() {
         BlockHound.install();
     }
 
     @BeforeEach
-    public void mockitoSetup(){
+    public void mockitoSetup() {
         Mockito.when(showRepository.findAll())
                 .thenReturn(Flux.just(show));
         Mockito.when(showRepository.findByName("testShow"))
@@ -59,11 +62,15 @@ public class ShowControllerIT {
                 .thenReturn(Mono.empty());
         Mockito.when(showRepository.save(ShowCreator.toUpdateShow()))
                 .thenReturn(Mono.empty());
+        Mockito.when(showRepository.saveAll(List.of(show, show, show)))
+                .thenReturn((Flux.just(show, show, show)));
+        Mockito.when(showRepository.saveAll(List.of(show, show, new Show().setName(""))))
+                .thenReturn(Flux.just(show, show, new Show().setName("")));
     }
 
     @Test
-    public void blockhoundTest(){
-        try{
+    public void blockhoundTest() {
+        try {
             Mono.delay(Duration.ofSeconds(1))
                     .doOnNext(it -> {
                         try {
@@ -73,7 +80,7 @@ public class ShowControllerIT {
                         }
                     })
                     .block();
-        }catch (Exception e){
+        } catch (Exception e) {
             Assertions.assertTrue(e.getCause() instanceof BlockingOperationError);
         }
     }
@@ -81,7 +88,7 @@ public class ShowControllerIT {
 
     @Test
     @DisplayName("ListAll returns a flux of Shows")
-    public void listAllReturnFluxOfŜhowWhenSuccessfull(){
+    public void listAllReturnFluxOfŜhowWhenSuccessfull() {
         testClient
                 .get()
                 .uri("/shows")
@@ -96,7 +103,7 @@ public class ShowControllerIT {
 
     @Test
     @DisplayName("find by name returns a Mono of Shows")
-    public void findByValidNameReturnFluxOfŜhowWhenSuccessfull(){
+    public void findByValidNameReturnFluxOfŜhowWhenSuccessfull() {
         testClient
                 .get()
                 .uri("/shows/testShow")
@@ -110,7 +117,7 @@ public class ShowControllerIT {
 
     @Test
     @DisplayName("create returns a Mono of Shows")
-    public void createReturnFluxOfŜhowWhenSuccessfull(){
+    public void createReturnFluxOfŜhowWhenSuccessfull() {
         testClient
                 .post()
                 .uri("/shows")
@@ -126,7 +133,7 @@ public class ShowControllerIT {
 
     @Test
     @DisplayName("create returns error when name is empty")
-    public void createReturnFErrorWhenNameIsEmpty(){
+    public void createReturnFErrorWhenNameIsEmpty() {
         testClient
                 .post()
                 .uri("/shows")
@@ -135,12 +142,12 @@ public class ShowControllerIT {
                 .exchange()
                 .expectStatus().isBadRequest()
                 .expectBody()
-                .jsonPath("$.message").isEqualTo("Validation failure");
+                .jsonPath("$.message").isEqualTo("Validation failed for argument at index 0 in method: public reactor.core.publisher.Mono<academy.devdojo.springwebfluxessentials.domain.Show> academy.devdojo.springwebfluxessentials.controller.ShowController.create(academy.devdojo.springwebfluxessentials.domain.Show), with 2 error(s): [Field error in object 'show' on field 'name': rejected value [null]; codes [NotNull.show.name,NotNull.name,NotNull.java.lang.String,NotNull]; arguments [org.springframework.context.support.DefaultMessageSourceResolvable: codes [show.name,name]; arguments []; default message [name]]; default message [The name of the show must not be null]] [Field error in object 'show' on field 'name': rejected value [null]; codes [NotEmpty.show.name,NotEmpty.name,NotEmpty.java.lang.String,NotEmpty]; arguments [org.springframework.context.support.DefaultMessageSourceResolvable: codes [show.name,name]; arguments []; default message [name]]; default message [The name of the show must not be empty]]");
     }
 
     @Test
     @DisplayName("find by name returns Error When it does not exist")
-    public void findByValidNameReturnErrorOfŜhowWhenItDoesNotExist(){
+    public void findByValidNameReturnErrorOfŜhowWhenItDoesNotExist() {
         testClient
                 .get()
                 .uri("/shows/testShow2")
@@ -151,7 +158,7 @@ public class ShowControllerIT {
 
     @Test
     @DisplayName("update returns no content of Shows")
-    public void updateReturnNoContentWhenSuccessfull(){
+    public void updateReturnNoContentWhenSuccessfull() {
         testClient
                 .put()
                 .uri("/shows/1")
@@ -164,7 +171,7 @@ public class ShowControllerIT {
 
     @Test
     @DisplayName("create returns error when name is empty")
-    public void updateReturnErrorWhenNotFound(){
+    public void updateReturnErrorWhenNotFound() {
         testClient
                 .put()
                 .uri("/shows/2")
@@ -173,12 +180,41 @@ public class ShowControllerIT {
                 .exchange()
                 .expectStatus().isNotFound()
                 .expectBody()
-                .jsonPath("$.message").isEqualTo("show not found");
+                .jsonPath("$.message").isEqualTo("404 NOT_FOUND \"show not found\"");
     }
 
     @Test
+    @DisplayName("create batch returns success when one or more names are valid")
+    public void batchCreateIsSuccessfullWhenNamesAreValid() {
+        testClient
+                .post()
+                .uri("/shows/batch")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(BodyInserters.fromValue(new Show(2, "oi")))
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.message").isEqualTo("Invalid Name was spotted");
+    }
+
+    @Test
+    @DisplayName("create returns is successfull when batch is valid")
+    public void batchCreateReturnsErrorWhenNameInvalidExists() {
+        testClient
+                .post()
+                .uri("/shows/batch")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(BodyInserters.fromValue(new Show(2, "oi")))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBodyList(Show.class)
+                .hasSize(3);
+    }
+
+
+    @Test
     @DisplayName("delete returns no content of Shows")
-    public void deleteReturnNoContentWhenSuccessfull(){
+    public void deleteReturnNoContentWhenSuccessfull() {
         testClient
                 .delete()
                 .uri("/shows/1")
@@ -189,14 +225,14 @@ public class ShowControllerIT {
 
     @Test
     @DisplayName("delete returns error when name is empty")
-    public void deleteReturnErrorWhenNotFound(){
+    public void deleteReturnErrorWhenNotFound() {
         testClient
                 .delete()
                 .uri("/shows/2")
                 .exchange()
                 .expectStatus().isNotFound()
                 .expectBody()
-                .jsonPath("$.message").isEqualTo("show not found");
+                .jsonPath("$.message").isEqualTo("404 NOT_FOUND \"show not found\"");
     }
 
 

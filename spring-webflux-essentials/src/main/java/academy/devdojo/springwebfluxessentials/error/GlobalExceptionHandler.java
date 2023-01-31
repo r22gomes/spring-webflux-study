@@ -1,11 +1,9 @@
 package academy.devdojo.springwebfluxessentials.error;
 
-
 import static org.springframework.boot.web.error.ErrorAttributeOptions.*;
 
 import java.util.Map;
 import java.util.Optional;
-
 import org.springframework.boot.autoconfigure.web.WebProperties;
 import org.springframework.boot.autoconfigure.web.reactive.error.AbstractErrorWebExceptionHandler;
 import org.springframework.boot.web.error.ErrorAttributeOptions;
@@ -33,7 +31,6 @@ public class GlobalExceptionHandler extends AbstractErrorWebExceptionHandler {
                                   WebProperties.Resources resourceProperties,
                                   ApplicationContext applicationContext,
                                   ServerCodecConfigurer codecConfigurer) {
-
         super(errorAttributes, resourceProperties, applicationContext);
         this.setMessageWriters(codecConfigurer.getWriters());
     }

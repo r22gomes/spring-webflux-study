@@ -11,6 +11,7 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.web.server.ResponseStatusException;
@@ -21,6 +22,8 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.time.Duration;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 @ExtendWith(SpringExtension.class)
@@ -53,6 +56,10 @@ public class ShowServiceTest {
                 .thenReturn(Mono.empty());
         Mockito.when(showRepository.save(ShowCreator.toUpdateShow()))
                 .thenReturn(Mono.empty());
+        Mockito.when(showRepository.saveAll(List.of(show, show, show)))
+                .thenReturn(Flux.just(show, show, show));
+        Mockito.when(showRepository.saveAll(List.of(show, show, new Show().setName(""))))
+                .thenReturn(Flux.just(show, show, new Show().setName("")));
     }
 
     @Test
@@ -110,6 +117,31 @@ public class ShowServiceTest {
                 .expectNext(show)
                 .verifyComplete();
     }
+
+    @Test
+    @DisplayName("save batch when all shoes are valid")
+    public void saveBatchShowWhenValid(){
+        List<Show> show1 = List.of(show, show, show);
+        StepVerifier.create(instance.saveAll(show1))
+                .expectSubscription()
+                .expectNext(show)
+                .expectNext(show)
+                .expectNext(show)
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Fail batch when one or more shows are not valid")
+    public void failBatchShowWhenInvalid(){
+        List<Show> show1 = List.of(show, show, new Show().setName(""));
+        StepVerifier.create(instance.saveAll(show1))
+                .expectSubscription()
+                .expectNext(show)
+                .expectNext(show)
+                .expectError(RuntimeException.class)
+                .verify();
+    }
+
 
     @Test
     @DisplayName("delete removes an show when successfull")
