@@ -3,6 +3,14 @@ spring:
         url: r2dbc:postgresql://localhost:54320/test?schema=webflux
         username: user
         password: admin
+    flyway:
+        url: jdbc:postgresql://localhost:54320/test
+        user: ${spring.r2dbc.username}
+        password: ${spring.r2dbc.password}
+        schemas:
+          - webflux
+        baselineOnMigrate: true
+        enabled: true
 
 logging:
     level:

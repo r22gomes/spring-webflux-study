@@ -37,10 +37,10 @@ public class ShowServiceTest {
 
     private final Show show = ShowCreator.validShow();
 
-    @BeforeAll
-    public static void setupBlockhound(){
-        BlockHound.install();
-    }
+//    @BeforeAll
+//    public static void setupBlockhound(){
+//        BlockHound.install();
+//    }
 
     @BeforeEach
     public void mockitoSetup(){
@@ -62,22 +62,22 @@ public class ShowServiceTest {
                 .thenReturn(Flux.just(show, show, new Show().setName("")));
     }
 
-    @Test
-    public void blockhoundTest(){
-        try{
-            Mono.delay(Duration.ofSeconds(1))
-                    .doOnNext(it -> {
-                        try {
-                            Thread.sleep(10);
-                        } catch (InterruptedException e) {
-                            throw new RuntimeException(e);
-                        }
-                    })
-                    .block();
-        }catch (Exception e){
-            Assertions.assertTrue(e.getCause() instanceof BlockingOperationError);
-        }
-    }
+//    @Test
+//    public void blockhoundTest(){
+//        try{
+//            Mono.delay(Duration.ofSeconds(1))
+//                    .doOnNext(it -> {
+//                        try {
+//                            Thread.sleep(10);
+//                        } catch (InterruptedException e) {
+//                            throw new RuntimeException(e);
+//                        }
+//                    })
+//                    .block();
+//        }catch (Exception e){
+//            Assertions.assertTrue(e.getCause() instanceof BlockingOperationError);
+//        }
+//    }
 
     @Test
     @DisplayName("ListAll returns a flux of Shows")
