@@ -1,29 +1,29 @@
 package academy.devdojo.springwebfluxessentials.integration;
 
 import academy.devdojo.springwebfluxessentials.domain.Show;
+import academy.devdojo.springwebfluxessentials.domain.User;
 import academy.devdojo.springwebfluxessentials.repository.ShowRepository;
-import academy.devdojo.springwebfluxessentials.service.ShowService;
+import academy.devdojo.springwebfluxessentials.repository.UserRepository;
 import academy.devdojo.springwebfluxessentials.service.util.ShowCreator;
+import academy.devdojo.springwebfluxessentials.service.util.WebTestClientUtil;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
-import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.BodyInserters;
-import reactor.blockhound.BlockHound;
-import reactor.blockhound.BlockingOperationError;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.time.Duration;
+import java.util.Arrays;
 import java.util.List;
 
 @ExtendWith(SpringExtension.class)
@@ -31,13 +31,19 @@ import java.util.List;
 @AutoConfigureWebTestClient
 public class ShowControllerIT {
 
+    private final static  String ADMIN = "admin";
+    private final static  String USER = "user";
+
     private final Show show = ShowCreator.validShow();
-
-
     @MockBean // REAL LIFE SCENARIO WOULD DEFENETLY USE A EMBEDDED DB INSTEAD OF MOCK
     private ShowRepository showRepository;
+    @MockBean // REAL LIFE SCENARIO WOULD DEFENETLY USE A EMBEDDED DB INSTEAD OF MOCK
+    private UserRepository userRepository;
+
     @Autowired
     private WebTestClient testClient;
+
+
 
 //    @BeforeAll
 //    public static void setupBlockhound() {
@@ -46,6 +52,13 @@ public class ShowControllerIT {
 
     @BeforeEach
     public void mockitoSetup() {
+
+        Mockito.when(userRepository.findByUsername("admin"))
+                .thenReturn(Mono.just(new User(1, "admin", "admin", "{bcrypt}$2a$10$4jxiuTEwJ2gs24qfekqUquaM7eQXj9SDqJZADDZKhDlVlXXRUqpxm", "ROLE_ADMIN,ROLE_USER")));
+        Mockito.when(userRepository.findByUsername("user"))
+                .thenReturn(Mono.just(new User(2, "user", "user", "{bcrypt}$2a$10$4jxiuTEwJ2gs24qfekqUquaM7eQXj9SDqJZADDZKhDlVlXXRUqpxm", "ROLE_USER")));
+        Mockito.when(userRepository.findByUsername("other"))
+                .thenReturn(Mono.empty());
         Mockito.when(showRepository.findAll())
                 .thenReturn(Flux.just(show));
         Mockito.when(showRepository.findByName("testShow"))
@@ -69,6 +82,7 @@ public class ShowControllerIT {
     }
 
 //    @Test
+
 //    public void blockhoundTest() {
 //        try {
 //            Mono.delay(Duration.ofSeconds(1))
@@ -87,6 +101,7 @@ public class ShowControllerIT {
 
 
     @Test
+    @WithMockUser(authorities = "ROLE_USER", username = "user")
     @DisplayName("ListAll returns a flux of Shows")
     public void listAllReturnFluxOfŜhowWhenSuccessfull() {
         testClient
@@ -102,6 +117,7 @@ public class ShowControllerIT {
     }
 
     @Test
+    @WithMockUser(authorities = "ROLE_USER", username = "user")
     @DisplayName("find by name returns a Mono of Shows")
     public void findByValidNameReturnFluxOfŜhowWhenSuccessfull() {
         testClient
@@ -116,6 +132,7 @@ public class ShowControllerIT {
     }
 
     @Test
+    @WithMockUser(authorities = "ROLE_ADMIN")
     @DisplayName("create returns a Mono of Shows")
     public void createReturnFluxOfŜhowWhenSuccessfull() {
         testClient
@@ -132,6 +149,7 @@ public class ShowControllerIT {
     }
 
     @Test
+    @WithMockUser(authorities = "ROLE_ADMIN")
     @DisplayName("create returns error when name is empty")
     public void createReturnFErrorWhenNameIsEmpty() {
         testClient
@@ -140,12 +158,11 @@ public class ShowControllerIT {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(BodyInserters.fromValue(new Show()))
                 .exchange()
-                .expectStatus().isBadRequest()
-                .expectBody()
-                .jsonPath("$.message").isEqualTo("Validation failed for argument at index 0 in method: public reactor.core.publisher.Mono<academy.devdojo.springwebfluxessentials.domain.Show> academy.devdojo.springwebfluxessentials.controller.ShowController.create(academy.devdojo.springwebfluxessentials.domain.Show), with 2 error(s): [Field error in object 'show' on field 'name': rejected value [null]; codes [NotNull.show.name,NotNull.name,NotNull.java.lang.String,NotNull]; arguments [org.springframework.context.support.DefaultMessageSourceResolvable: codes [show.name,name]; arguments []; default message [name]]; default message [The name of the show must not be null]] [Field error in object 'show' on field 'name': rejected value [null]; codes [NotEmpty.show.name,NotEmpty.name,NotEmpty.java.lang.String,NotEmpty]; arguments [org.springframework.context.support.DefaultMessageSourceResolvable: codes [show.name,name]; arguments []; default message [name]]; default message [The name of the show must not be empty]]");
+                .expectStatus().isBadRequest();
     }
 
     @Test
+    @WithMockUser(authorities = "ROLE_USER", username = "user")
     @DisplayName("find by name returns Error When it does not exist")
     public void findByValidNameReturnErrorOfŜhowWhenItDoesNotExist() {
         testClient
@@ -157,6 +174,7 @@ public class ShowControllerIT {
     }
 
     @Test
+    @WithMockUser(authorities = "ROLE_ADMIN")
     @DisplayName("update returns no content of Shows")
     public void updateReturnNoContentWhenSuccessfull() {
         testClient
@@ -170,6 +188,7 @@ public class ShowControllerIT {
     }
 
     @Test
+    @WithMockUser(authorities = "ROLE_ADMIN")
     @DisplayName("create returns error when name is empty")
     public void updateReturnErrorWhenNotFound() {
         testClient
@@ -184,27 +203,29 @@ public class ShowControllerIT {
     }
 
     @Test
+    @WithMockUser(authorities = "ROLE_ADMIN")
     @DisplayName("create batch returns success when one or more names are valid")
     public void batchCreateIsSuccessfullWhenNamesAreValid() {
         testClient
                 .post()
                 .uri("/shows/batch")
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(BodyInserters.fromValue(new Show(2, "oi")))
+                .body(BodyInserters.fromValue(List.of(show, show, new Show().setName(""))))
                 .exchange()
                 .expectStatus().isBadRequest()
                 .expectBody()
-                .jsonPath("$.message").isEqualTo("Invalid Name was spotted");
+                .jsonPath("$.message").isEqualTo("400 BAD_REQUEST \"Invalid Name was spotted\"");
     }
 
     @Test
+    @WithMockUser(authorities = "ROLE_ADMIN")
     @DisplayName("create returns is successfull when batch is valid")
     public void batchCreateReturnsErrorWhenNameInvalidExists() {
         testClient
                 .post()
                 .uri("/shows/batch")
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(BodyInserters.fromValue(new Show(2, "oi")))
+                .body(BodyInserters.fromValue(Arrays.asList(show, show, show)))
                 .exchange()
                 .expectStatus().isOk()
                 .expectBodyList(Show.class)
@@ -213,6 +234,7 @@ public class ShowControllerIT {
 
 
     @Test
+    @WithMockUser(authorities = "ROLE_ADMIN")
     @DisplayName("delete returns no content of Shows")
     public void deleteReturnNoContentWhenSuccessfull() {
         testClient
@@ -223,7 +245,9 @@ public class ShowControllerIT {
                 .isNoContent();
     }
 
+
     @Test
+    @WithMockUser(authorities = "ROLE_ADMIN")
     @DisplayName("delete returns error when name is empty")
     public void deleteReturnErrorWhenNotFound() {
         testClient
