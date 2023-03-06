@@ -3,28 +3,19 @@ package academy.devdojo.springwebfluxessentials.service;
 import academy.devdojo.springwebfluxessentials.domain.Show;
 import academy.devdojo.springwebfluxessentials.repository.ShowRepository;
 import academy.devdojo.springwebfluxessentials.service.util.ShowCreator;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.web.server.ResponseStatusException;
-import reactor.blockhound.BlockHound;
-import reactor.blockhound.BlockingOperationError;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import java.time.Duration;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.NoSuchElementException;
 
 @ExtendWith(SpringExtension.class)
 public class ShowServiceTest {
@@ -61,23 +52,6 @@ public class ShowServiceTest {
         Mockito.when(showRepository.saveAll(List.of(show, show, new Show().setName(""))))
                 .thenReturn(Flux.just(show, show, new Show().setName("")));
     }
-
-//    @Test
-//    public void blockhoundTest(){
-//        try{
-//            Mono.delay(Duration.ofSeconds(1))
-//                    .doOnNext(it -> {
-//                        try {
-//                            Thread.sleep(10);
-//                        } catch (InterruptedException e) {
-//                            throw new RuntimeException(e);
-//                        }
-//                    })
-//                    .block();
-//        }catch (Exception e){
-//            Assertions.assertTrue(e.getCause() instanceof BlockingOperationError);
-//        }
-//    }
 
     @Test
     @DisplayName("ListAll returns a flux of Shows")

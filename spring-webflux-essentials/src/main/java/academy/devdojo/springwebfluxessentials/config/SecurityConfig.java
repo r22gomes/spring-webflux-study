@@ -27,11 +27,12 @@ public class SecurityConfig {
                 .pathMatchers(HttpMethod.GET, "/shows/*").hasRole("USER")
                 .pathMatchers(HttpMethod.GET, "/shows").hasRole("USER")
                 .pathMatchers(HttpMethod.POST, "/user").permitAll()
-                .pathMatchers("/swagger-ui.html",
+                .pathMatchers(
+                        "/swagger-ui.html",
                         "/swagger-ui/**",
                         "/v3/api-docs/**",
-                        "/webjars/**")
-                .permitAll()
+                        "/webjars/**"
+                ).permitAll()
                 .anyExchange().authenticated()
                 .and()
                 .formLogin()

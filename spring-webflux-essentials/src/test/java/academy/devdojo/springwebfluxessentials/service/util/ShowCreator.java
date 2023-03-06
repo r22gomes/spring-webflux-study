@@ -4,7 +4,6 @@ import academy.devdojo.springwebfluxessentials.domain.Show;
 
 public class ShowCreator {
 
-
     public static Show toBeSaved(){
         return Show.builder()
                 .name("testShow")

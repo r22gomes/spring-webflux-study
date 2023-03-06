@@ -1,8 +1,6 @@
 package academy.devdojo.springwebfluxessentials.config;
 
 import org.flywaydb.core.Flyway;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 
 public class FlywayConfig {

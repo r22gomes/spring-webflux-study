@@ -1,8 +1,8 @@
 spring:
     r2dbc:
         url: r2dbc:postgresql://localhost:54320/test?schema=webflux
-        username: user
-        password: admin
+        username: <user>
+        password: <admin>
     flyway:
         url: jdbc:postgresql://localhost:54320/test
         user: ${spring.r2dbc.username}
@@ -15,7 +15,6 @@ spring:
 springdoc:
     swagger-ui:
         path: /swagger-ui.html
-
 
 logging:
     level:

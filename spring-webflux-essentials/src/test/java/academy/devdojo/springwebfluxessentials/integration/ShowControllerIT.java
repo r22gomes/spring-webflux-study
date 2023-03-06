@@ -35,20 +35,18 @@ public class ShowControllerIT {
     private final static  String USER = "user";
 
     private final Show show = ShowCreator.validShow();
-    @MockBean // REAL LIFE SCENARIO WOULD DEFENETLY USE A EMBEDDED DB INSTEAD OF MOCK
+
+    /**
+     * REAL LIFE SCENARIO SHOULD USE EMBEDDED DB INSTEAD OF MOCK
+     * IN THIS CASE IT IS NOT REALLY A INTEGRATION TEST
+     */
+    @MockBean
     private ShowRepository showRepository;
-    @MockBean // REAL LIFE SCENARIO WOULD DEFENETLY USE A EMBEDDED DB INSTEAD OF MOCK
+    @MockBean
     private UserRepository userRepository;
 
     @Autowired
     private WebTestClient testClient;
-
-
-
-//    @BeforeAll
-//    public static void setupBlockhound() {
-//        BlockHound.install();
-//    }
 
     @BeforeEach
     public void mockitoSetup() {
@@ -80,25 +78,6 @@ public class ShowControllerIT {
         Mockito.when(showRepository.saveAll(List.of(show, show, new Show().setName(""))))
                 .thenReturn(Flux.just(show, show, new Show().setName("")));
     }
-
-//    @Test
-
-//    public void blockhoundTest() {
-//        try {
-//            Mono.delay(Duration.ofSeconds(1))
-//                    .doOnNext(it -> {
-//                        try {
-//                            Thread.sleep(10);
-//                        } catch (InterruptedException e) {
-//                            throw new RuntimeException(e);
-//                        }
-//                    })
-//                    .block();
-//        } catch (Exception e) {
-//            Assertions.assertTrue(e.getCause() instanceof BlockingOperationError);
-//        }
-//    }
-
 
     @Test
     @WithMockUser(authorities = "ROLE_USER", username = "user")

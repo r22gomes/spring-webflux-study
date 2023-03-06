@@ -7,8 +7,8 @@ services:
     ports:
       - "54320:5432"
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: admin
+      POSTGRES_USER: <user>
+      POSTGRES_PASSWORD: <admin>
     volumes:
       - local_pgdata:/var/lib/postgresql/data
 
@@ -19,8 +19,8 @@ services:
     ports:
       - "5050:80"
     environment:
-      PGADMIN_DEFAULT_EMAIL: ricardo.gomes.swe@gmail.com
-      PGADMIN_DEFAULT_PASSWORD: Admin123
+      PGADMIN_DEFAULT_EMAIL: <email>
+      PGADMIN_DEFAULT_PASSWORD: <pass>
     volumes:
       - pgadmin-data:/var/lib/pgadmin
 
