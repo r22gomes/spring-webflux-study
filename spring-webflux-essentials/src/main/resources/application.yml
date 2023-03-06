@@ -11,6 +11,11 @@ spring:
           - webflux
         baselineOnMigrate: true
         enabled: true
+        
+springdoc:
+    swagger-ui:
+        path: /swagger-ui.html
+
 
 logging:
     level:
